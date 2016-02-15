@@ -9,9 +9,16 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+//    private TextView original;      //This variable for the Sensor.TYPE_ORIENTATION
+//    private TextView alternative;   //This variable for the Sensor.TYPE_ACCELEROMETER with Sensor.TYPE_MAGNETIC_FIELD
+    private MenuItem menuItem;
+    private String TAG = "MainActivity";
 
     private Float azimuth;
 
@@ -34,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             canvas.drawLine(0, centery, width, centery, paint);
             // Rotate the canvas with the azimut
             if (azimuth != null)
-                canvas.rotate(-azimuth*360/(2*3.14159f), centerx, centery);
+                canvas.rotate(-azimuth * 360 / (2 * 3.14159f), centerx, centery);
             paint.setColor(0xff0000ff);
             canvas.drawLine(centerx, -1000, centerx, +1000, paint);
             canvas.drawLine(-1000, centery, 1000, centery, paint);
@@ -48,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager mSensorManager;
     Sensor accelerometer;
     Sensor magnetometer;
+    Sensor orientation;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,12 +64,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        orientation = mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION);
+
+//        original = (TextView)findViewById(R.id.originalWay);
+//        alternative = (TextView)findViewById(R.id.alternativeWay);
     }
 
     protected void onResume() {
         super.onResume();
         mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, orientation, SensorManager.SENSOR_DELAY_UI);
     }
 
     protected void onPause() {
@@ -73,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     float[] mGravity;
     float[] mGeomagnetic;
+    float[] mOrientation;
+
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             mGravity = event.values;
@@ -86,8 +101,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
                 azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
+                Log.i(TAG, "alternative way : " + (- azimuth * 360 / (2 * 3.14159f)));
+//                TextView alternative = new TextView(this);
+//                alternative.setText(String.valueOf(azimuth));
+//                menuItem.setActionView(alternative);
             }
         }
+        if(event.sensor.getType() == Sensor.TYPE_ORIENTATION){
+            mOrientation = new float[3];
+            mOrientation = event.values;
+            Log.i(TAG, "original way : " + mOrientation[0]);
+        }
+
+//        Log.i(TAG, "" + getResources().getConfiguration().orientation);
+
         mCustomDrawableView.invalidate();
     }
 }
